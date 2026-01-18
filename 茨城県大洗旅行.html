@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>茨城県大洗旅行 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Chosen Palette: Warm Neutrals with Ocean Blue and Shrine Vermilion Accents -->
+    <style>
+      body {
+        font-family: "Noto Sans JP", sans-serif;
+        background-color: #fafaf9;
+      }
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* タイムラインの垂直線 */
+      .timeline-line {
+        position: absolute;
+        left: 16; /* アイコンの中心に合わせる (pl-24に対応) */
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #e5e7eb;
+        z-index: 0;
+      }
+      .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px;
+        max-height: 400px;
+      }
+      .tab-active {
+        border-bottom: 3px solid #0ea5e9;
+        color: #0ea5e9;
+        font-weight: 700;
+      }
+      .tab-inactive {
+        color: #78716c;
+      }
+      .tab-inactive:hover {
+        color: #44403c;
+        background-color: #f5f5f4;
+      }
+    </style>
+  </head>
+  <body class="text-stone-800">
+    <!-- App Container -->
+    <div
+      class="max-w-3xl mx-auto min-h-screen bg-white shadow-xl flex flex-col"
+    >
+      <!-- Header -->
+      <header
+        class="bg-gradient-to-r from-sky-700 to-sky-500 text-white p-6 relative overflow-hidden"
+      >
+        <div
+          class="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10"
+        >
+          <i class="fas fa-water text-9xl"></i>
+        </div>
+        <div class="relative z-10">
+          <h1 class="text-2xl font-bold mb-1">茨城県大洗旅行 1泊2日</h1>
+          <p class="text-sky-100 text-sm flex items-center gap-2">
+            <i class="far fa-calendar-alt"></i> 2026/01/27(火) - 28(水)
+          </p>
+          <div class="mt-4 flex gap-3">
+            <span
+              class="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm border border-white/30"
+            >
+              <i class="fas fa-users mr-1 text-sky-200"></i> 3名
+            </span>
+            <span
+              class="px-3 py-1 bg-white/20 rounded-full text-xs backdrop-blur-sm border border-white/30"
+            >
+              <i class="fas fa-car mr-1 text-sky-200"></i> レンタカー
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <nav
+        class="flex border-b border-stone-200 sticky top-0 bg-white z-20 shadow-sm"
+      >
+        <button
+          onclick="switchTab('day1')"
+          id="tab-day1"
+          class="flex-1 py-4 text-center text-sm transition-all duration-200 tab-active"
+        >
+          1日目
+        </button>
+        <button
+          onclick="switchTab('day2')"
+          id="tab-day2"
+          class="flex-1 py-4 text-center text-sm transition-all duration-200 tab-inactive"
+        >
+          2日目
+        </button>
+        <button
+          onclick="switchTab('budget')"
+          id="tab-budget"
+          class="flex-1 py-4 text-center text-sm transition-all duration-200 tab-inactive"
+        >
+          費用・予算
+        </button>
+      </nav>
+
+      <!-- Content Area -->
+      <main class="flex-grow p-4 md:p-6 bg-stone-50" id="main-content">
+        <!-- Dynamic Introduction Block -->
+        <div
+          id="section-intro"
+          class="mb-6 p-4 bg-white rounded-xl shadow-sm border border-stone-100"
+        >
+          <h2 class="text-lg font-bold text-stone-700 mb-2 flex items-center">
+            <i class="fas fa-info-circle text-sky-500 mr-2"></i>
+            <span id="intro-title">1日目のハイライト</span>
+          </h2>
+          <p
+            id="intro-text"
+            class="text-sm text-stone-600 leading-relaxed italic"
+          >
+            初日は移動と歴史探訪がメイン。偕楽園や鹿島神宮といった名所を巡りつつ、地元の食材を楽しみ、夕方には大洗磯前神社の絶景を目指します。
+          </p>
+        </div>
+
+        <!-- Views Container -->
+        <div class="relative">
+          <!-- Day 1 View -->
+          <div id="view-day1" class="view-section fade-in">
+            <div id="timeline-day1" class="space-y-0 relative pb-10"></div>
+          </div>
+
+          <!-- Day 2 View -->
+          <div id="view-day2" class="view-section hidden fade-in">
+            <div id="timeline-day2" class="space-y-0 relative pb-10"></div>
+          </div>
+
+          <!-- Budget View -->
+          <div id="view-budget" class="view-section hidden fade-in">
+            <div
+              class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200 mb-6"
+            >
+              <h3 class="text-center font-bold text-stone-700 mb-4">
+                1人あたりの費用内訳
+              </h3>
+              <div class="chart-container">
+                <canvas id="costChart"></canvas>
+              </div>
+              <div class="text-center mt-6">
+                <span class="text-sm text-stone-500"
+                  >合計見積もり (1人あたり)</span
+                >
+                <div class="text-4xl font-bold text-sky-600 mt-1">¥30,582</div>
+              </div>
+            </div>
+
+            <div
+              class="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden"
+            >
+              <table class="w-full text-sm text-left text-stone-600">
+                <thead class="text-xs text-stone-700 uppercase bg-stone-100">
+                  <tr>
+                    <th scope="col" class="px-6 py-4">項目</th>
+                    <th scope="col" class="px-6 py-4 text-right">金額 (1人)</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                  <tr class="hover:bg-stone-50">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-train w-5 text-stone-400"></i> 移動運賃
+                      (JR)
+                    </td>
+                    <td class="px-6 py-4 text-right">¥4,290</td>
+                  </tr>
+                  <tr class="hover:bg-stone-50">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-bed w-5 text-stone-400"></i>
+                      宿泊＋レンタカー
+                    </td>
+                    <td class="px-6 py-4 text-right">¥15,972</td>
+                  </tr>
+                  <tr class="hover:bg-stone-50">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-utensils w-5 text-stone-400"></i> 昼食
+                      (常陸牛)
+                    </td>
+                    <td class="px-6 py-4 text-right">¥2,000</td>
+                  </tr>
+                  <tr class="hover:bg-stone-50">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-ticket-alt w-5 text-stone-400"></i> 観光
+                      (入園料等)
+                    </td>
+                    <td class="px-6 py-4 text-right">¥2,620</td>
+                  </tr>
+                  <tr class="hover:bg-stone-50">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-gas-pump w-5 text-stone-400"></i>
+                      ガソリン代
+                    </td>
+                    <td class="px-6 py-4 text-right">¥700</td>
+                  </tr>
+                  <tr class="hover:bg-sky-50 bg-sky-50/30">
+                    <td class="px-6 py-4 font-medium">
+                      <i class="fas fa-shopping-bag w-5"></i> お土産・軽食・雑費
+                    </td>
+                    <td class="px-6 py-4 text-right">¥5,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer
+        class="bg-white p-6 text-center text-xs text-stone-400 border-t border-stone-100"
+      >
+        茨城県大洗旅行 旅程表 &copy; 2026
+      </footer>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+      const appData = {
+        day1: [
+          {
+            time: "07:08",
+            end: "09:44",
+            title: "移動：武蔵浦和 → 水戸",
+            type: "transport",
+            icon: "fa-train",
+            desc: "大宮・小山経由で移動. JR水戸線を利用.",
+            sub: ["07:08 武蔵浦和発", "08:23 小山発", "09:44 水戸着"],
+          },
+          {
+            time: "10:30",
+            title: "レンタカー手続",
+            type: "car",
+            icon: "fa-car",
+            desc: "オリックスレンタカー 水戸駅前店",
+            loc: "水戸駅",
+          },
+          {
+            time: "11:00",
+            title: "偕楽園 散策",
+            type: "spot",
+            icon: "fa-tree",
+            desc: "日本三名園の一つ. 常盤神社も隣接.",
+            cost: "320円",
+          },
+          {
+            time: "12:00",
+            title: "昼食：常陸牛 きくすい",
+            type: "food",
+            icon: "fa-utensils",
+            desc: "茨城名物・常陸牛ランチ.",
+            loc: "水戸市西原",
+            cost: "2,000円",
+          },
+          {
+            time: "13:00",
+            title: "移動：鹿島方面へ",
+            type: "move",
+            icon: "fa-route",
+            desc: "内陸ルート経由 (約1.5時間)",
+          },
+          {
+            time: "14:30",
+            title: "鹿島神宮 参拝",
+            type: "spot",
+            icon: "fa-torii-gate",
+            desc: "東国三社の一つ. 要石や御手洗池など見どころ多数.",
+            loc: "鹿嶋市",
+          },
+          {
+            time: "15:30",
+            title: "北上・ショッピング",
+            type: "shop",
+            icon: "fa-shopping-basket",
+            desc: "深作農園やめんたいパークに寄り道.",
+            sub: ["深作農園 (スイーツ)", "めんたいパーク大洗"],
+          },
+          {
+            time: "17:00",
+            title: "大洗磯前神社",
+            type: "spot",
+            icon: "fa-camera",
+            desc: "「神磯の鳥居」で夕暮れ鑑賞.",
+            loc: "大洗町",
+          },
+          {
+            time: "18:00",
+            title: "亀の井ホテル 大洗",
+            type: "hotel",
+            icon: "fa-hotel",
+            desc: "チェックイン. 夕食と温泉を堪能.",
+            loc: "大洗町",
+          },
+        ],
+        day2: [
+          {
+            time: "08:00",
+            title: "ホテル出発",
+            type: "hotel",
+            icon: "fa-check",
+            desc: "朝食後にチェックアウト.",
+          },
+          {
+            time: "08:30",
+            title: "那珂湊おさかな市場",
+            type: "food",
+            icon: "fa-fish",
+            desc: "新鮮な魚介を. 岩牡蠣の買い食い等も楽しみ.",
+            loc: "ひたちなか市",
+          },
+          {
+            time: "09:00",
+            title: "大洗水族館",
+            type: "spot",
+            icon: "fa-otter",
+            desc: "アクアワールド. サメの展示が充実.",
+            cost: "2,300円",
+            duration: "約3時間",
+          },
+          {
+            time: "12:30",
+            title: "水戸駅へ移動",
+            type: "move",
+            icon: "fa-route",
+            desc: "レンタカー返却の準備.",
+          },
+          {
+            time: "13:00",
+            title: "レンタカー返却",
+            type: "car",
+            icon: "fa-undo",
+            desc: "水戸駅前店に返却.",
+          },
+          {
+            time: "13:30",
+            title: "お土産・駅ビル",
+            type: "shop",
+            icon: "fa-gift",
+            desc: "水戸駅でお土産（納豆・梅干し等）を購入.",
+          },
+          {
+            time: "14:05",
+            end: "16:44",
+            title: "帰路：水戸 → 大宮",
+            type: "transport",
+            icon: "fa-train",
+            desc: "常磐線・水戸線・上野東京ライン経由.",
+            sub: ["14:05 水戸発", "16:44 大宮着"],
+          },
+        ],
+        costs: {
+          labels: [
+            "交通 (JR)",
+            "宿泊＋レンタカー",
+            "食事",
+            "観光施設",
+            "ガソリン",
+            "雑費・お土産",
+          ],
+          data: [4290, 15972, 2000, 2620, 700, 5000],
+          colors: [
+            "#94a3b8",
+            "#0ea5e9",
+            "#f43f5e",
+            "#8b5cf6",
+            "#f59e0b",
+            "#06b6d4",
+          ],
+        },
+      };
+
+      function getIconColor(type) {
+        switch (type) {
+          case "transport":
+            return "bg-stone-500 text-white";
+          case "car":
+            return "bg-amber-500 text-white";
+          case "spot":
+            return "bg-sky-500 text-white";
+          case "food":
+            return "bg-rose-500 text-white";
+          case "shop":
+            return "bg-orange-400 text-white";
+          case "hotel":
+            return "bg-indigo-500 text-white";
+          default:
+            return "bg-stone-400 text-white";
+        }
+      }
+
+      // 時間を HH:mm 形式に整形する関数
+      function formatTime(timeStr) {
+        if (!timeStr) return "";
+        if (timeStr.includes(":")) {
+          const parts = timeStr.split(":");
+          return parts[0].padStart(2, "0") + ":" + parts[1].padStart(2, "0");
+        }
+        return timeStr.padStart(2, "0") + ":00";
+      }
+
+      function renderTimeline(dayId, data) {
+        const container = document.getElementById(`timeline-${dayId}`);
+        container.innerHTML = `<div class="timeline-line"></div>`;
+
+        data.forEach((item) => {
+          let subHtml = item.sub
+            ? `<ul class="mt-2 text-[11px] text-stone-500 space-y-1 list-disc list-inside bg-stone-100/50 p-2 rounded">${item.sub.map((s) => `<li>${s}</li>`).join("")}</ul>`
+            : "";
+          let detailsHtml =
+            item.cost || item.loc || item.duration
+              ? `<div class="mt-2 flex flex-wrap gap-2 text-[10px]">${item.loc ? `<span class="bg-white border border-stone-200 text-stone-600 px-2 py-0.5 rounded shadow-sm"><i class="fas fa-map-marker-alt mr-1"></i>${item.loc}</span>` : ""}${item.cost ? `<span class="bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200 font-medium"><i class="fas fa-yen-sign mr-1"></i>${item.cost}</span>` : ""}${item.duration ? `<span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200"><i class="far fa-clock mr-1"></i>${item.duration}</span>` : ""}</div>`
+              : "";
+
+          const html = `
+                <div class="relative pl-24 py-5 pr-4 group transition-all duration-300">
+                    <div class="absolute left-6 top-6 w-14 text-left text-[12px] font-bold text-stone-600 group-hover:text-stone-900 transition-colors z-10">
+                        ${formatTime(item.time)}${item.end ? `<br><span class="text-[9px] font-normal text-stone-400">~${formatTime(item.end)}</span>` : ""}
+                    </div>
+                    <div class="absolute left-0.5 -translate-x-1/2 top-6 w-5 h-5 rounded-full ${getIconColor(item.type)} flex items-center justify-center text-[10px] z-20 border-2 border-white shadow-md ring-4 ring-stone-50 group-hover:scale-110 transition-transform">
+                        <i class="fas ${item.icon}"></i>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-stone-100 shadow-sm group-hover:shadow-md group-hover:border-sky-100 transition-all">
+                        <h3 class="font-bold text-stone-800 text-sm group-hover:text-sky-600">${item.title}</h3>
+                        <p class="text-xs text-stone-500 mt-1 leading-relaxed">${item.desc}</p>
+                        ${detailsHtml}
+                        ${subHtml}
+                    </div>
+                </div>`;
+          container.innerHTML += html;
+        });
+      }
+
+      function switchTab(tabName) {
+        ["day1", "day2", "budget"].forEach((t) => {
+          const btn = document.getElementById(`tab-${t}`);
+          const view = document.getElementById(`view-${t}`);
+          if (t === tabName) {
+            btn.classList.add("tab-active");
+            btn.classList.remove("tab-inactive");
+            view.classList.remove("hidden");
+          } else {
+            btn.classList.remove("tab-active");
+            btn.classList.add("tab-inactive");
+            view.classList.add("hidden");
+          }
+        });
+
+        const introTitle = document.getElementById("intro-title");
+        const introText = document.getElementById("intro-text");
+
+        if (tabName === "day1") {
+          introTitle.innerHTML =
+            '<i class="fas fa-info-circle text-sky-500 mr-2"></i>1日目のハイライト';
+          introText.textContent =
+            "初日は移動と歴史探訪がメイン. 偕楽園や鹿島神宮といった名所を巡りつつ、地元の食材を楽しみ、夕方には大洗磯前神社の絶景を目指します.";
+        } else if (tabName === "day2") {
+          introTitle.innerHTML =
+            '<i class="fas fa-fish text-sky-500 mr-2"></i>2日目のハイライト';
+          introText.textContent =
+            "2日目は海を満喫. 那珂湊おさかな市場で新鮮な魚介を楽しみ、大洗水族館でイルカショーを見学. 午後は早めに帰路につきます.";
+        } else {
+          introTitle.innerHTML =
+            '<i class="fas fa-wallet text-sky-500 mr-2"></i>予算・費用の概要';
+          introText.textContent =
+            "今回の旅行費用の概算です. お土産や市場での軽食など、現地で発生する細かな出費を「雑費」としてあらかじめ計上しています.";
+          renderChart();
+        }
+      }
+
+      let chartInstance = null;
+      function renderChart() {
+        if (chartInstance) return;
+        const ctx = document.getElementById("costChart").getContext("2d");
+        chartInstance = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: appData.costs.labels,
+            datasets: [
+              {
+                data: appData.costs.data,
+                backgroundColor: appData.costs.colors,
+                borderWidth: 4,
+                borderColor: "#ffffff",
+                hoverOffset: 15,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "65%",
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: { boxWidth: 12, padding: 15, font: { size: 10 } },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) =>
+                    ` ${context.label}: ¥${context.parsed.toLocaleString()}`,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        renderTimeline("day1", appData.day1);
+        renderTimeline("day2", appData.day2);
+      });
+    </script>
+  </body>
+</html>
